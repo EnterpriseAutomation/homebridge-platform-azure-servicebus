@@ -1,7 +1,7 @@
 {
-  "name": "homebridge-platform-sqs",
-  "version": "0.0.3",
-  "description": "Amazon AWS SQS and Lambda plugin for homebridge: https://github.com/nfarina/homebridge",
+  "name": "homebridge-platform-azure-servicebus",
+  "version": "0.0.1",
+  "description": "Azure Service Bus plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "ISC",
   "keywords": [
     "homebridge-plugin"
@@ -11,6 +11,7 @@
     "homebridge": ">=0.3.3"
   },
   "dependencies": {
-    "sqs-worker": "0.0.2"
+    "@azure/service-bus": "^1.1.2",
+    "azure": "^2.3.1-preview"
   }
 }

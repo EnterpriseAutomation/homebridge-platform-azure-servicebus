@@ -1,5 +1,9 @@
-var SQSWorker = require('sqs-worker');
+// var SQSWorker = require('sqs-worker');
+const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus");
+
 var Accessory, Service, Characteristic, UUIDGen;
+
+
 
 module.exports = function(homebridge) {
 
@@ -13,10 +17,10 @@ module.exports = function(homebridge) {
 
   // For platform plugin to be considered as dynamic platform plugin,
   // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-  homebridge.registerPlatform("homebridge-platform-sqs", "SQS", SQSPlatform, true);
+  homebridge.registerPlatform("homebridge-platform-azure-servicebus", "AzureServiceBus", AzureServiceBusPlatform, true);
 }
 
-function SQSPlatform(log, config, api) {
+function AzureServiceBusPlatform(log, config, api) {
 
   //just capture the input, we'll set it up in accessories
   this.log = log;
@@ -24,14 +28,14 @@ function SQSPlatform(log, config, api) {
   this.api = api;
 }
 
-SQSPlatform.prototype = {
+AzureServiceBusPlatform.prototype = {
   accessories: function(callback) {
     //For each device in cfg, create an accessory!
     var foundAccessories = this.config.accessories;
     var myAccessories = [];
 
     for (var i = 0; i < foundAccessories.length; i++) {
-      var accessory = new SQSAccessory(this.log, foundAccessories[i]);
+      var accessory = new AzureServiceBusAccessory(this.log, foundAccessories[i]);
       myAccessories.push(accessory);
       this.log('Created ' + accessory.name + ' Accessory');
     }
@@ -47,7 +51,7 @@ SQSPlatform.prototype = {
 
 //an accessorary, eg a button. This one is mostly just an on/off state button.
 //SQS message toggles it, as does pressing it in the home app
-function SQSAccessory(log, accessory) {
+function AzureServiceBusAccessory(log, accessory) {
   this.log = log;
   this.accessory = accessory;
   this.name = this.accessory.name;
@@ -55,59 +59,38 @@ function SQSAccessory(log, accessory) {
   this.startListener();
 }
 
-SQSAccessory.prototype = {
+AzureServiceBusAccessory.prototype = {
   startListener: function() {
     var self = this;
 
-    //setup the SQS queue listener
-    var options = {
-      url: this.accessory.queueurl,
-      region: this.accessory.region,
-      accessKeyId: this.accessory.accesskey,
-      secretAccessKey: this.accessory.secret,
+    this.queueName = this.accessory.queueName;
+    this.serviceBusClient = ServiceBusClient.createFromConnectionString(this.accessory.connectionString);
+    this.queueClient = this.serviceBusClient.createQueueClient(this.queueName);
+    this.receiver = this.queueClient.createReceiver(ReceiveMode.receiveAndDelete);
+    
+    this.receiver.registerMessageHandler(function (brokeredMessage) {
+      self.log("message received: " + brokeredMessage.body);
+    
+      var obj = brokeredMessage.body;
 
-      //eat the logging, make it goes out the Homebridge logging
-      // mostly cos sqsworker is a bit noisy
-      log: {
-        info: function(a, b) {
-          //self.log(a + " " + b);
-        },
-        error: function(a, b) {
-          self.log("err:" + a + " " + b);
-        }
+      if(obj.target === self.name)
+      {
+        self.log("found incoming message for '" + self.name + "' which is this accessory, processing.");
       }
-    };
-
-    //setup the queue.
-    this.queue = new SQSWorker(options, function(event, done) {
-      //self.log("message...");
-      //if (self.accessory.verbose) {
-      self.log(event);
-      //}
-
-
-      self.toggleButton();
-
-      //report back to SQS that we are done - otherwise it'll resubmit the message
-      var success = true;
-
-      // Call `done` when you are done processing a message.
-      // If everything went successfully and you don't want to see it any more,
-      // set the second parameter to `true`.
-      done(null, success);
-    });
-
-    //we should start by purging the queue, 'cos you dont want a load of state changes
-    //coming in on startup
-    this.queue.client.purgeQueue({
-      QueueUrl: options.url
-    }, function(err, data) {
-      if (err) {
-        self.log(err);
+      else
+      {
+        self.log("got incoming message for another accessory ('" + self.name + "') ignoring.");
+        return;
       }
-      self.log("Purged the queue");
-    });
 
+      self.toggleButton();  
+    },
+    function (err) {
+      self.log("error occured: " + err);
+    },
+    {
+      autoComplete: true
+    });
   },
 
   toggleButton: function() {
@@ -130,7 +113,7 @@ SQSAccessory.prototype = {
 
     var informationService = new Service.AccessoryInformation();
     informationService
-      .setCharacteristic(Characteristic.Manufacturer, 'AmazonSQS');
+      .setCharacteristic(Characteristic.Manufacturer, 'Fargo Bose Security');
 
     var switchService = new Service.Switch(this.accessory.name);
     switchService

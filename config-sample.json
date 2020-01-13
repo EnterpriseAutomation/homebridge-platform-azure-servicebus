@@ -8,15 +8,12 @@
   "description": "Sample Config",
   "platforms": [
     {
-      "platform": "SQS",
-      "name": "SQS",
+      "platform": "AzureServiceBus",
+      "name": "First-Button",
       "accessories": [
         {
           "name": "Dash Button",
-          "queueurl": "https://sqs.us-west-2.amazonaws.com/accountid/sqsqueuename",
-          "accesskey": "AWSACCESSKEY",
-          "secret": "AWSACCESSSECRET",
-          "region": "us-west-2"
+          "connectionString": "foo"
         }
       ]
     }
