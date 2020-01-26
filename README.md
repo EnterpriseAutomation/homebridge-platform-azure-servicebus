@@ -22,7 +22,7 @@ My primary use case was connecting my home automation kit to events from Office3
     2. Microsoft Flow checks to see if the categories include the category `Critical`
     3. If the category is contained, send a message using Service bus to my service bus queue (**Authenticated**);
 3. Queue receives Message
-4. Homebridge plugin receives message using AQMP listener.
+4. Homebridge plugin receives message using AQMP listener (**Authenticated**).
 5. Homebridge plugin checks to see if the target accessory of the message, the ID of the accessory is simply the name. 
       1. If the accessory is contained in the list, it will be toggled. This change is observable by HomeKit and can be used to trigger automation.
       2. if the accessory is not found, the message will be deleted. 
