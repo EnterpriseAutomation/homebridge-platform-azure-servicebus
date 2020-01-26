@@ -20,7 +20,7 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: '$v = $env:Build_BuildNumber; $c = Get-Content package.json -Raw; $c = $c.Replace("1.0.1", $v); $c | Out-File package.json'
+    script: '$v = $env:Build_BuildNumber; Write-Host $v; $c = Get-Content package.json -Raw; $c = $c.Replace("1.0.1", $v); $c | Out-File package.json'
 
 - task: Npm@1
   inputs:
