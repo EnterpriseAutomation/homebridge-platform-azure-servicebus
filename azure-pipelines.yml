@@ -17,6 +17,11 @@ steps:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: '$v = $env:Build_BuildNumber; $c = Get-Content package.json -Raw; $c = $c.Replace("1.0.1", $v); $c | Out-File package.json'
+
 - task: Npm@1
   inputs:
     command: 'install'
@@ -27,3 +32,15 @@ steps:
     command: 'publish'
     workingDir: '$(Build.SourcesDirectory)'
     publishEndpoint: 'npm-tera'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
