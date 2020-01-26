@@ -1,6 +1,6 @@
 {
   "name": "homebridge-platform-azure-servicebus",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Azure Service Bus plugin for homebridge: https://github.com/nfarina/homebridge",
   "license": "ISC",
   "keywords": [
@@ -11,7 +11,6 @@
     "homebridge": ">=0.3.3"
   },
   "dependencies": {
-    "@azure/service-bus": "^1.1.2",
-    "azure": "^2.3.1-preview"
+    "@azure/service-bus": "^1.1.2"
   }
 }
